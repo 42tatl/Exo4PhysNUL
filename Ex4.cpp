@@ -45,20 +45,22 @@ double epsilon(bool uniform_rho_case, double r, double r1, double R, double epsi
     if (0 <= r && r < r1) return epsilon_a;
     else if (r1 <= r && r <= R) return epsilon_b;
     else {
-    cout << "Ton r il est bizarre la: r = " << r << endl;
-    return 0.0;
-}
+        cout << "Ton r il est bizarre la: r = " << r << endl;
+        return 0.0;
+    }
 }
 
 //TODO build the rho_epsilon function (rho_lib / epsilon_0)
 double rho_epsilon(bool uniform_rho_case, double r, double rho0, double r1, double epsilon_0)
 {
     if (uniform_rho_case) return 1.0;
-    if (0 <= r && r < r1) return (rho0 * sin(PI * r / r1)) / epsilon_0;
-    else if (r1 <= r) return 0.0;
-    else {
-    cout << "Ton r il est bizarre la: r = " << r << endl;
-    return 0.0;
+    else{ 
+        if (0 <= r && r < r1) return (rho0 * sin(PI * r / r1)) / epsilon_0;
+        else if (r1 <= r) return 0.0;
+        else {
+            cout << "Ton r il est bizarre la: r = " << r << endl;
+            return 0.0;
+        } 
     }
 }
 
