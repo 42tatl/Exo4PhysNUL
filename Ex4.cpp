@@ -3,13 +3,11 @@
 #include <iostream>
 #include <string>
 #include <vector>
-
 #include "ConfigFile.tpp"
 #include "Ex4.hpp"
 
 using namespace std;
 
-const double PI=3.1415926535897932384626433832795028841971e0;
 // Résolution d'un système d'équations linéaires par élimination de
 // Gauss-Jordan:
 template<class T>
@@ -137,7 +135,7 @@ int main(int argc, char* argv[])
     }
 
     // Construct the matrix and right-hand side
-    vector<double> diagonal(pointCount, 1.0);  // Diagonal
+    vector<double> diagonal(pointCount, 0.0);  // Diagonal
     vector<double> lower(pointCount - 1, 0.0); // Lower diagonal
     vector<double> upper(pointCount - 1, 0.0); // Upper diagonal
     vector<double> rhs(pointCount, 0.0);       // Right-hand-side

@@ -24,16 +24,18 @@ def read_in_file(filename):
     return variables
 
 def get_params(params):
-    '''Extracts the parameters from the dictionary'''
-    tFin = params.get("tFin", 0.0)
-    m1 = params.get("m1", 0.0)
-    m2 = params.get("m2", 0.0)
-    x0 = params.get("x0", 0.0)
-    v0x = params.get("v0x", 0.0)
-    v0y = params.get("v0y", 0.0)
-    a = params.get("a", 0.0)
-    tol = params.get("tol", 0.0)
-    return tFin, m1, m2, x0, v0x, v0y, a, tol
+    '''Extracts the physical and numerical parameters from the dictionary'''
+    R = params.get("R", 1.0)
+    r1 = params.get("r1", 0.5)
+    epsilon_a = params.get("epsilon_a", 1.0)
+    epsilon_b = params.get("epsilon_b", 1.0)
+    uniform_rho_case = params.get("uniform_rho_case", True)
+    VR = params.get("VR", 0.0)
+    rho0 = params.get("rho0", 1.0)
+    N1 = params.get("N1", 10)
+    N2 = params.get("N2", 10)
+
+    return R, r1, epsilon_a, epsilon_b, uniform_rho_case, VR, rho0, N1, N2
 
 def run_simulation(executable, input_filename, output_template, **params):
     '''Runs the simulation with the given parameters'''
@@ -69,6 +71,8 @@ def run_simulation(executable, input_filename, output_template, **params):
 
     return output_filename, result
 
+
+
 def run_param_sweep(executable, input_filename, param_name, values, fixed_params):
     outputs = []
     param_list = []
@@ -80,6 +84,9 @@ def run_param_sweep(executable, input_filename, param_name, values, fixed_params
         outputs.append(outname)
         param_list.append(params.copy())  # Store each individual param set
     return outputs, param_list
+
+
+
 
 
 def save_figure(filename, fig=None, subfolder="figures", dpi=300, tight=True):
@@ -106,13 +113,9 @@ def save_figure(filename, fig=None, subfolder="figures", dpi=300, tight=True):
 
     print(f"Figure saved to {filepath}")
 
-def read_output_file(filename):
+def read_output_file_phi(filename):
+    '''Reads output_phi.out and returns r, phi'''
     data = np.loadtxt(filename)
-    a = data[:, 0]
-    b = data[:, 3]
-    c = data[:, 4]
-    d = data[:, 1]
-    e = data[:, 2]
-    f = data[:, 5]
-    g = data[:, 6] #j'ai besoin des nsteps
-    return a,b,c,d,e,f,g
+    r = data[:, 0]
+    phi = data[:, 1]
+    return r, phi
