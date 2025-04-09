@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "ConfigFile.tpp"
-
+#include "Ex4.hpp"
 
 using namespace std;
 
@@ -39,22 +39,32 @@ solve(const vector<T>& diag,
 }
 
 //TODO build the epsilon function
-double epsilon()
+double epsilon(bool uniform_rho_case, double r, double r1, double R, double epsilon_a, double epsilon_b)
 {
+    if (uniform_rho_case) return epsilon_a;
+    if (0 <= r && r < r1) return epsilon_a;
+    else if (r1 <= r && r <= R) return epsilon_b;
+    else {
+    cout << "Ton r il est bizarre la: r = " << r << endl;
     return 0.0;
+}
 }
 
 //TODO build the rho_epsilon function (rho_lib / epsilon_0)
-double rho_epsilon()
+double rho_epsilon(bool uniform_rho_case, double r, double rho0, double r1, double epsilon_0)
 {
+    if (uniform_rho_case) return 1.0;
+    if (0 <= r && r < r1) return (rho0 * sin(PI * r / r1)) / epsilon_0;
+    else if (r1 <= r) return 0.0;
+    else {
+    cout << "Ton r il est bizarre la: r = " << r << endl;
     return 0.0;
+    }
 }
 
-int
-main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
     
-
     // USAGE: Exercise4 [configuration-file] [<settings-to-overwrite> ...]
 
     // Read the default input
@@ -106,13 +116,23 @@ main(int argc, char* argv[])
     // Position of elements
     vector<double> r(pointCount);
 
-    //TODO build the nodes vector r
+    for (int i = 0; i <= N1; ++i) {
+        r[i] = i * h1;
+    }
+
+    for (int i = 1; i <= N2; ++i) {
+        r[N1 + i] = r1 + i * h2;
+    }
     
     // Arrays initialization
     vector<double> h(pointCount-1); 	// Distance between grid points
     vector<double> midPoint(pointCount-1);  // Midpoint of each grid element
         
     // TODO build the h vector and midpoint vector
+    for (int i = 0; i < pointCount - 1; ++i) {
+        h[i] = r[i + 1] - r[i];
+        midPoint[i] = 0.5 * (r[i + 1] + r[i]);
+    }
 
     // Construct the matrix and right-hand side
     vector<double> diagonal(pointCount, 1.0);  // Diagonal
@@ -121,17 +141,21 @@ main(int argc, char* argv[])
     vector<double> rhs(pointCount, 0.0);       // Right-hand-side
     
     // Loop over the intervals: add the contributions to matrix and rhs   
-    for (int k = 0; k < pointCount-1; ++k) {
-        
-                   
-        // TODO build the vectors diagonal, lower, upper, rhs
-    }    
+    for (int k = 0; k < pointCount - 1; ++k) {
+        double hk = h[k];
+        double rk_mid = midPoint[k];
+        double rho_eps = rho_epsilon(uniform_rho_case, rk_mid, rho0, r1, epsilon_0);
+        upper[k] += -1.0 / hk * epsilon(uniform_rho_case, rk_mid, r1, R, epsilon_a, epsilon_b)*midPoint[k];
+        lower[k] += -1.0 / hk * epsilon(uniform_rho_case, rk_mid, r1, R, epsilon_a, epsilon_b)*midPoint[k];
+        diagonal[k] += 1.0 / hk * epsilon(uniform_rho_case, rk_mid, r1, R, epsilon_a, epsilon_b)*midPoint[k];
+        rhs[k] += 0.5 * rho_eps * rk_mid * hk;
+        rhs[k + 1] += 0.5 * rho_eps * rk_mid * hk;
+    }
 
     // TODO boundary condition at r=R (modify the lines below)
-    lower[lower.size() - 1]       = 0.0;
-    diagonal[diagonal.size() - 1] = 1.0;
-    rhs[rhs.size() - 1] = 0.0;
-
+    lower[lower.size() - 1]       = 0;
+    diagonal[diagonal.size() - 1] = 1;
+    rhs[rhs.size() - 1] = VR;
 
     // Solve the system of equations
     vector<double> phi = solve(diagonal, lower, upper, rhs);
@@ -141,8 +165,8 @@ main(int argc, char* argv[])
     vector<double> D(pointCount - 1, 0);
     for (int i = 0; i < E.size(); ++i) {
         // TODO calculate E and D
-        E[i] = 0.0;
-        D[i] = 0.0; 
+        E[i] = -1.0 * (phi[i + 1] - phi[i]) / h[i];
+        D[i] = epsilon(uniform_rho_case, midPoint[i], r1, R, epsilon_a, epsilon_b) * E[i]; 
     }
 
     // Export data
