@@ -37,7 +37,7 @@ solve(const vector<T>& diag,
 }
 
 //TODO build the epsilon function
-double epsilon(bool uniform_rho_case, double r, double r1, double R, double epsilon_a, double epsilon_b)
+double epsilon(const bool uniform_rho_case, double r, const double r1, const double R, const double epsilon_a, const double epsilon_b)
 {
     if (uniform_rho_case) return epsilon_a;
     if (0 <= r && r < r1) return epsilon_a;
@@ -49,12 +49,12 @@ double epsilon(bool uniform_rho_case, double r, double r1, double R, double epsi
 }
 
 //TODO build the rho_epsilon function (rho_lib / epsilon_0)
-double rho_epsilon(bool uniform_rho_case, double r, double rho0, double r1, double epsilon_0)
+double rho_epsilon(double r,const bool uniform_rho_case, const double R,const double rho0,const double r1)
 {
     if (uniform_rho_case) return 1.0;
     else{ 
-        if (0 <= r && r < r1) return (rho0 * sin(PI * r / r1)) / epsilon_0;
-        else if (r1 <= r) return 0.0;
+        if (0 <= r && r < r1) return (rho0 * sin(PI * r / r1)); //on ne divise PAS par espilon_0 parce que la fonction return le quotient déjà
+        else if (r1 < r && r <= R) return 0.0;
         else {
             cout << "Ton r il est bizarre la: r = " << r << endl;
             return 0.0;
@@ -94,6 +94,7 @@ int main(int argc, char* argv[])
     // Dielectric relative permittivity
     const double epsilon_a = configFile.get<double>("epsilon_a");
     const double epsilon_b = configFile.get<double>("epsilon_b");
+    const double epsilon_0 = configFile.get<double>("epsilon_0");
     
     // Boundary conditions
     const double VR = configFile.get<double>("VR");
@@ -144,12 +145,15 @@ int main(int argc, char* argv[])
     for (int k = 0; k < pointCount - 1; ++k) {
         double hk = h[k];
         double rk_mid = midPoint[k];
-        double rho_eps = rho_epsilon(uniform_rho_case, rk_mid, rho0, r1, epsilon_0);
-        upper[k] += -1.0 / hk * epsilon(uniform_rho_case, rk_mid, r1, R, epsilon_a, epsilon_b)*midPoint[k];
-        lower[k] += -1.0 / hk * epsilon(uniform_rho_case, rk_mid, r1, R, epsilon_a, epsilon_b)*midPoint[k];
-        diagonal[k] += 1.0 / hk * epsilon(uniform_rho_case, rk_mid, r1, R, epsilon_a, epsilon_b)*midPoint[k];
-        rhs[k] += 0.5 * rho_eps * rk_mid * hk;
-        rhs[k + 1] += 0.5 * rho_eps * rk_mid * hk;
+        double rho_eps = rho_epsilon(rk_mid,uniform_rho_case, R, rho0, r1);
+        double diag_fact =  epsilon(uniform_rho_case, rk_mid, r1, R, epsilon_a, epsilon_b) * rk_mid/ hk;
+        upper[k] -= diag_fact;
+        lower[k] -= diag_fact;
+        diagonal[k] += diag_fact;
+        diagonal[k + 1] += diag_fact; //ici je ne suis pas sure 
+        double rhs_fact = 0.5 * rho_eps * rk_mid* hk;
+        rhs[k] += rhs_fact;
+        rhs[k + 1] += rhs_fact;
     }
 
     // TODO boundary condition at r=R (modify the lines below)
@@ -165,8 +169,8 @@ int main(int argc, char* argv[])
     vector<double> D(pointCount - 1, 0);
     for (int i = 0; i < E.size(); ++i) {
         // TODO calculate E and D
-        E[i] = -1.0 * (phi[i + 1] - phi[i]) / h[i];
-        D[i] = epsilon(uniform_rho_case, midPoint[i], r1, R, epsilon_a, epsilon_b) * E[i]; 
+        E[i] = -(phi[i + 1] - phi[i]) / h[i];
+        D[i] = epsilon(uniform_rho_case, midPoint[i], r1, R, epsilon_a, epsilon_b) * epsilon_0 * E[i];
     }
 
     // Export data

@@ -34,11 +34,12 @@ def get_params(params):
     rho0 = params.get("rho0", 1.0)
     N1 = params.get("N1", 10)
     N2 = params.get("N2", 10)
+    epsilon_0 = params.get("epsilon_0", 8.854187817e-12)
 
-    return R, r1, epsilon_a, epsilon_b, uniform_rho_case, VR, rho0, N1, N2
+    return R, r1, epsilon_a, epsilon_b, uniform_rho_case, VR, rho0, N1, N2, epsilon_0
 
+'''
 def run_simulation(executable, input_filename, output_template, **params):
-    '''Runs the simulation with the given parameters'''
 
     # Ensure outputs/ subfolder exists
     output_dir = "outputs"
@@ -70,6 +71,45 @@ def run_simulation(executable, input_filename, output_template, **params):
         print(f" ERROR: The output file '{output_filename}' was NOT created!")
 
     return output_filename, result
+'''
+
+
+#TEST
+def run_simulation(executable, input_filename, output_template, **params):
+    '''Runs the simulation with the given parameters'''
+
+    # Ensure outputs/ subfolder exists
+    output_dir = "outputs"
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Create the output filename from template
+    raw_filename = output_template.format(**params)
+    output_filename = os.path.join(output_dir, raw_filename)  # Save in subfolder
+
+    # Build the command string
+    param_str = " ".join(f"{key}={value:.15g}" for key, value in params.items())
+    cmd = f'"{executable}" {input_filename} {param_str} output={output_filename}'
+
+    print(f"\n Running command: {cmd}")
+
+    # Run the command
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+
+    print("----- STDOUT -----")
+    print(result.stdout)
+
+    print("----- STDERR -----")
+    print(result.stderr)
+
+    phi_file = output_filename + "_phi.out"
+    E_file   = output_filename + "_E.out"
+    D_file   = output_filename + "_D.out"
+
+    return phi_file, E_file, D_file, result
+
+
+
+
 
 
 
@@ -119,3 +159,21 @@ def read_output_file_phi(filename):
     r = data[:, 0]
     phi = data[:, 1]
     return r, phi
+
+def read_output_files(phi_file, E_file, D_file):
+
+    data_phi = np.loadtxt(phi_file)
+    r = data_phi[:, 0]
+    phi = data_phi[:, 1]
+
+  
+    data_E = np.loadtxt(E_file)
+    r_E = data_E[:, 0]
+    E = data_E[:, 1]
+
+   
+    data_D = np.loadtxt(D_file)
+    r_D = data_D[:, 0]
+    D = data_D[:, 1]
+
+    return r, phi, r_E, E, r_D, D
