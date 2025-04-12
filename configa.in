@@ -6,6 +6,6 @@ epsilon_0 = 8.854187817e-12
 uniform_rho_case = 1
 VR = 0
 rho0=1.0e4
-N1=10
+N1 =10
 N2=10
 verbose=1 

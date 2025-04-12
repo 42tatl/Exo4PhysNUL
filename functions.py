@@ -38,42 +38,6 @@ def get_params(params):
 
     return R, r1, epsilon_a, epsilon_b, uniform_rho_case, VR, rho0, N1, N2, epsilon_0
 
-'''
-def run_simulation(executable, input_filename, output_template, **params):
-
-    # Ensure outputs/ subfolder exists
-    output_dir = "outputs"
-    os.makedirs(output_dir, exist_ok=True)
-
-    # Create the output filename from template
-    raw_filename = output_template.format(**params)
-    output_filename = os.path.join(output_dir, raw_filename)  # Save in subfolder
-
-    # Build the command string
-    param_str = " ".join(f"{key}={value:.15g}" for key, value in params.items())
-    cmd = f'"{executable}" {input_filename} {param_str} output={output_filename}'
-
-    print(f"\n Running command: {cmd}")
-
-    # Run the command
-    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-
-    print("----- STDOUT -----")
-    print(result.stdout)
-
-    print("----- STDERR -----")
-    print(result.stderr)
-
-    # Check result
-    if os.path.exists(output_filename):
-        print(f" SUCCESS: Output file '{output_filename}' was created!")
-    else:
-        print(f" ERROR: The output file '{output_filename}' was NOT created!")
-
-    return output_filename, result
-'''
-
-
 #TEST
 def run_simulation(executable, input_filename, output_template, **params):
     '''Runs the simulation with the given parameters'''
@@ -113,17 +77,39 @@ def run_simulation(executable, input_filename, output_template, **params):
 
 
 
-def run_param_sweep(executable, input_filename, param_name, values, fixed_params):
-    outputs = []
+def run_param_sweep_qa(executable, input_filename, param_name, values, fixed_params): #ATTENTION: cette fonction est seulement pour la question a car ca ecrase N2!!!!!
+    phi_outputs = []
+    E_outputs = []
+    D_outputs = []
+    param_list = []
+    for val in values:
+        params = fixed_params.copy()
+        params[param_name] = val
+        params["N2"] = val # Ensure N2 is set to the same value as N1
+        output_template = f"output_{param_name}_{{{param_name}}}.out"
+        phi_file, E_file, D_file, result = run_simulation(executable, input_filename, output_template, **params)
+        phi_outputs.append(phi_file)
+        E_outputs.append(E_file)
+        D_outputs.append(D_file)
+        param_list.append(params.copy())  # Store each individual param set
+    return phi_outputs, E_outputs, D_outputs, param_list
+
+
+def run_param_sweep(executable, input_filename, param_name, values, fixed_params): 
+    phi_outputs = []
+    E_outputs = []
+    D_outputs = []
     param_list = []
     for val in values:
         params = fixed_params.copy()
         params[param_name] = val
         output_template = f"output_{param_name}_{{{param_name}}}.out"
-        outname, result = run_simulation(executable, input_filename, output_template, **params)
-        outputs.append(outname)
+        phi_file, E_file, D_file, result = run_simulation(executable, input_filename, output_template, **params)
+        phi_outputs.append(phi_file)
+        E_outputs.append(E_file)
+        D_outputs.append(D_file)
         param_list.append(params.copy())  # Store each individual param set
-    return outputs, param_list
+    return phi_outputs, E_outputs, D_outputs, param_list
 
 
 
