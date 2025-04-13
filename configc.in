@@ -1,0 +1,11 @@
+R=0.05
+r1=0.015
+epsilon_a = 1
+epsilon_b = 4
+epsilon_0 = 8.854187817e-12
+uniform_rho_case = 0
+VR = 0
+rho0=1.0e4
+N1 =15
+N2=20
+verbose=1 
