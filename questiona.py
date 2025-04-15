@@ -64,6 +64,7 @@ plt.show()
 
 #Convergence study
 errors = []
+init_phi = []
 N_values = []
 dts = []
 dts_squared = []
@@ -72,6 +73,7 @@ phi_anal_0 = 0.25 * (R**2)
 for phi_file, E_file, D_file, param_set in zip(phi_outputs, E_outputs, D_outputs, param_sets):
     r, phi = fct.read_output_file_phi(phi_file)
     phi_0 = phi[0]
+    init_phi.append(phi_0)
     error = np.abs(phi_0 - phi_anal_0)
     errors.append(error)
     N_values.append(param_set["N1"])
@@ -79,9 +81,9 @@ for phi_file, E_file, D_file, param_set in zip(phi_outputs, E_outputs, D_outputs
     dts_squared.append(1/(param_set["N1"]**2))
 
 plt.figure()
-plt.plot(dts_squared, errors, 'o-', label=r"$|\phi_\mathrm{num}(0) - \phi_\mathrm{anal}(0)|$")
+plt.plot(dts_squared, init_phi, 'o-', label=r"$\phi(0)$")
 plt.xlabel(r"N$^{-2}$ (N1=N2)", fontsize=16)
-plt.ylabel(r"Error on $\phi(0)$ [V]", fontsize=16)
+plt.ylabel(r"$\phi(0)$ [V]", fontsize=16)
 plt.xticks(fontsize=12)
 plt.yticks(fontsize=12)
 plt.grid(True)
@@ -101,7 +103,6 @@ plt.ylabel(r"Error on $\phi(0)$ [V]", fontsize=16)
 plt.xticks(fontsize=12)
 plt.yticks(fontsize=12)
 plt.grid(True)
-#plt.grid(True, which="both", ls="--", linewidth=0.5)
 plt.legend(fontsize=16)
 plt.tight_layout()
 fct.save_figure("convergence_phi0_N.png")
